@@ -7,24 +7,57 @@ host = "localhost"
 port = 8889
 
 
-# Replace test_login !!!
+async def get_data_from_client(reader):
+    read_size = 1024
+    data = await reader.read(1024)
+    full_length = event_parser.get_full_length(data.decode())
+
+    while read_size < full_length:
+        data += await reader.read(1024)
+        read_size += 1024
+
+    return data.decode()
+
+
+async def send_request_to_server_and_receive_data(writer, reader, request_string):
+    print('Send: %r' % request_string)
+    writer.write(request_string.encode())
+
+    data = await get_data_from_client(reader)
+    print('Recived: %r' % data)
+
+    return data
+
+
 async def imitate_login(username):
-    logging.info('Login initial!')
     login_request = event_types.LoginRequest(username)
     login_request_string = login_request.convert_to_string()
     return login_request_string
 
 
+async def imitate_message(username, message):
+    message_request = event_types.MessageRequest(username, message)
+    message_request_string = message_request.convert_to_string()
+    return message_request_string
+
+
 async def handle_connection(loop):
     reader, writer = await asyncio.open_connection(host, port, loop=loop)
-
     login_request_string = await imitate_login("Test User")
 
-    print('Send: %r' % login_request_string)
-    writer.write(login_request_string.encode())
+    # Send login to server and receive data.
+    data_from_server = await send_request_to_server_and_receive_data(writer, reader, login_request_string)
 
-    data = await reader.read(100)
-    print('Recived: %r' % data.decode())
+    # Replace case if protocol will be finished
+    if data_from_server == login_request_string:
+        print("Established connection with server\n")
+
+        while True:
+            # do something
+            print("You can start typing now!\n")
+            message_request_string = await imitate_message("Test User", "TestTestTestTestTestTestTestTestTestTestTestTest")
+            data_from_server = await send_request_to_server_and_receive_data(writer, reader, message_request_string)
+            break
 
     print('Close the socket')
     writer.close()
