@@ -1,5 +1,7 @@
 import socket
 import threading
+import time
+
 import event_parser
 import event_types
 
@@ -10,7 +12,7 @@ all_message = []
 isLogged = False
 
 
-def get_data_from_server(server_socket):
+def get_data_from_server():
     read_size = 1024
     while True:
         print("Waiting for a data...")
@@ -58,9 +60,10 @@ def create_login_request(username):
     return login_request_string
 
 
-def send_request_to_server(server_socket, request_string):
+def send_request_to_server(request_string):
     print('Send: %r' % request_string)
     server_socket.send(request_string.encode())
+    time.sleep(0.1)
 
 
 def create_message_request(username, message):
@@ -69,27 +72,16 @@ def create_message_request(username, message):
     return message_request_string
 
 
-# Start
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    server_socket.connect((host, port))
-
-    # Listening without join !
-    listen = threading.Thread(target=get_data_from_server, args=(server_socket,))
-    listen.start()
-
-    # Login request example usage.
-    login_request1 = threading.Thread(target=send_request_to_server(server_socket, create_login_request("Hej")))
-    login_request1.start()
-    login_request1.join()
-
-    # Message request example usage.
-    message_request1 = threading.Thread(target=send_request_to_server(server_socket, create_message_request("Hej", "To ja")))
-    message_request1.start()
-    message_request1.join()
-
-    # server_socket.close()
 
 
-except socket.error as e:
-    print(e)
+def start():
+    try:
+        server_socket.connect((host, port))
+
+        threading.Thread(target=get_data_from_server).start()
+
+        send_request_to_server(create_login_request("hej"))
+
+    except socket.error as e:
+        print(e)
