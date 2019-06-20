@@ -9,52 +9,57 @@ import event_types
 host = "localhost"
 port = 8889
 
-all_message = []
-isLogged = False
 module_var = sys.modules[__name__]
 
 module_var.isLogged = False
+module_var.online_list = []
+module_var.all_messages = []
+
 
 def get_data_from_server():
     read_size = 1024
     while True:
-        print("Waiting for a data...")
         data = server_socket.recv(1024)
         full_length = event_parser.get_full_length(data.decode())
 
         while read_size < full_length:
-            data += socket.recv(1024)
+            data += server_socket.recv(1024)
             read_size += 1024
 
         received_response = data.decode()
         print("RECEIVED: " + received_response)
 
         if received_response:
-            print("Starting making events: ")
+            #print("Starting making events: ")
             create_event_from_string(received_response)
 
 
 def create_event_from_string(response_from_server):
-    global isLogged
     pr = event_parser.EventParser()
     event_from_server = pr.parse_string_to_event(response_from_server)
 
-    print("Create_event_from_string_start")
+    #print("Create_event_from_string_start")
 
     if event_from_server.event_type == event_types.LOGIN_RESPONSE:
-        print("\nLogin response: ")
+        #print("\nLogin response: ")
 
         if event_from_server.code == event_types.CODE_ACCEPT:
             print("ACCEPTED")
             module_var.isLogged = True
+            #print("ACCEPTED")
+            isLogged = True
 
         # When username exists
         elif event_from_server.code == event_types.CODE_REJECT:
-            print("REJECT")
+            print("REJECT LOGIN")
 
-    if event_from_server.event_type == event_types.MESSAGE_REQUEST:
-        print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
-        all_message.append(event_from_server)
+    elif event_from_server.event_type == event_types.MESSAGE_REQUEST:
+        #print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
+        module_var.all_message.append(event_from_server)
+
+    elif event_from_server.event_type == event_types.ONLINE_REQUEST:
+        module_var.online_list.clear()
+        module_var.online_list = eval(event_from_server.online_users)
 
 
 def create_login_request(username):
