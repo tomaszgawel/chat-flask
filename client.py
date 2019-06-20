@@ -1,4 +1,5 @@
 import socket
+import sys
 import threading
 import time
 
@@ -10,7 +11,9 @@ port = 8889
 
 all_message = []
 isLogged = False
+module_var = sys.modules[__name__]
 
+module_var.isLogged = False
 
 def get_data_from_server():
     read_size = 1024
@@ -28,11 +31,11 @@ def get_data_from_server():
 
         if received_response:
             print("Starting making events: ")
-            event_creator = threading.Thread(target=create_event_from_string,args=(received_response,))
-            event_creator.start()
+            create_event_from_string(received_response)
 
 
 def create_event_from_string(response_from_server):
+    global isLogged
     pr = event_parser.EventParser()
     event_from_server = pr.parse_string_to_event(response_from_server)
 
@@ -43,7 +46,7 @@ def create_event_from_string(response_from_server):
 
         if event_from_server.code == event_types.CODE_ACCEPT:
             print("ACCEPTED")
-            isLogged = True
+            module_var.isLogged = True
 
         # When username exists
         elif event_from_server.code == event_types.CODE_REJECT:
