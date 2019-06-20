@@ -81,7 +81,5 @@ def start():
 
         threading.Thread(target=get_data_from_server).start()
 
-        send_request_to_server(create_login_request("hej"))
-
     except socket.error as e:
         print(e)
