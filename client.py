@@ -46,8 +46,6 @@ def create_event_from_string(response_from_server):
         if event_from_server.code == event_types.CODE_ACCEPT:
             print("ACCEPTED")
             module_var.isLogged = True
-            #print("ACCEPTED")
-            isLogged = True
 
         # When username exists
         elif event_from_server.code == event_types.CODE_REJECT:
@@ -55,7 +53,7 @@ def create_event_from_string(response_from_server):
 
     elif event_from_server.event_type == event_types.MESSAGE_REQUEST:
         #print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
-        module_var.all_message.append(event_from_server)
+        module_var.all_messages.append(event_from_server)
 
     elif event_from_server.event_type == event_types.ONLINE_REQUEST:
         module_var.online_list.clear()
