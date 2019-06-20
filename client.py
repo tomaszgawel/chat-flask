@@ -1,69 +1,95 @@
-import asyncio
-import event_types
+import socket
+import threading
 import event_parser
-import logging
+import event_types
 
 host = "localhost"
 port = 8889
 
+all_message = []
+isLogged = False
 
-async def get_data_from_client(reader):
+
+def get_data_from_server(server_socket):
     read_size = 1024
-    data = await reader.read(1024)
-    full_length = event_parser.get_full_length(data.decode())
+    while True:
+        print("Waiting for a data...")
+        data = server_socket.recv(1024)
+        full_length = event_parser.get_full_length(data.decode())
 
-    while read_size < full_length:
-        data += await reader.read(1024)
-        read_size += 1024
+        while read_size < full_length:
+            data += socket.recv(1024)
+            read_size += 1024
 
-    return data.decode()
+        received_response = data.decode()
+        print("RECEIVED: " + received_response)
 
-
-async def send_request_to_server_and_receive_data(writer, reader, request_string):
-    print('Send: %r' % request_string)
-    writer.write(request_string.encode())
-
-    data = await get_data_from_client(reader)
-    print('Recived: %r' % data)
-
-    return data
+        if received_response:
+            print("Starting making events: ")
+            event_creator = threading.Thread(target=create_event_from_string,args=(received_response,))
+            event_creator.start()
 
 
-async def imitate_login(username):
+def create_event_from_string(response_from_server):
+    pr = event_parser.EventParser()
+    event_from_server = pr.parse_string_to_event(response_from_server)
+
+    print("Create_event_from_string_start")
+
+    if event_from_server.event_type == event_types.LOGIN_RESPONSE:
+        print("\nLogin response: ")
+
+        if event_from_server.code == event_types.CODE_ACCEPT:
+            print("ACCEPTED")
+            isLogged = True
+
+        # When username exists
+        elif event_from_server.code == event_types.CODE_REJECT:
+            print("REJECT")
+
+    if event_from_server.event_type == event_types.MESSAGE_REQUEST:
+        print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
+        all_message.append(event_from_server)
+
+
+def create_login_request(username):
     login_request = event_types.LoginRequest(username)
     login_request_string = login_request.convert_to_string()
     return login_request_string
 
 
-async def imitate_message(username, message):
+def send_request_to_server(server_socket, request_string):
+    print('Send: %r' % request_string)
+    server_socket.send(request_string.encode())
+
+
+def create_message_request(username, message):
     message_request = event_types.MessageRequest(username, message)
     message_request_string = message_request.convert_to_string()
     return message_request_string
 
 
-async def handle_connection(loop):
-    reader, writer = await asyncio.open_connection(host, port, loop=loop)
-    login_request_string = await imitate_login("Test User")
+# Start
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+try:
+    server_socket.connect((host, port))
 
-    # Send login to server and receive data.
-    data_from_server = await send_request_to_server_and_receive_data(writer, reader, login_request_string)
+    # Listening without join !
+    listen = threading.Thread(target=get_data_from_server, args=(server_socket,))
+    listen.start()
 
-    # Replace case if protocol will be finished
-    if data_from_server == login_request_string:
-        print("Established connection with server\n")
+    # Login request example usage.
+    login_request1 = threading.Thread(target=send_request_to_server(server_socket, create_login_request("Hej")))
+    login_request1.start()
+    login_request1.join()
 
-        while True:
-            # do something
-            print("You can start typing now!\n")
-            message_request_string = await imitate_message("Test User", "TestTestTestTestTestTestTestTestTestTestTestTest")
-            data_from_server = await send_request_to_server_and_receive_data(writer, reader, message_request_string)
-            break
+    # Message request example usage.
+    message_request1 = threading.Thread(target=send_request_to_server(server_socket, create_message_request("Hej", "To ja")))
+    message_request1.start()
+    message_request1.join()
 
-    print('Close the socket')
-    writer.close()
+    # server_socket.close()
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(handle_connection(loop))
-loop.close()
-
+except socket.error as e:
+    print(e)
