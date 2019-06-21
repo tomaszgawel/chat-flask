@@ -12,7 +12,7 @@ start()
 @app.route('/api/sendmessage', methods=['POST'])
 def send_message():
     data = json.loads(request.data)
-    send_request_to_server(create_message_request(data['login'], data['message']))
+    send_request_to_server(create_message_request(data['user'], data['messageText']))
 
     return app.response_class(
         response=json.dumps({'code': 'ok'}),
@@ -29,7 +29,7 @@ def login():
     send_request_to_server(create_login_request(data['username']))
 
     if module_var.isLogged:
-        response = {'username': data['username'], 'access': 'grated'}
+        response = {'username': data['username'], 'access': 'granted'}
     else:
         response = {'username': data['username'], 'access': 'denied'}
 
@@ -58,7 +58,7 @@ def get_all_available_message():
 
 @app.route('/api/onlineusers', methods=['GET'])
 def get_online_users():
-    return json.dumps({"online:": module_var.online_list})
+    return json.dumps({"online": module_var.online_list})
 
 
 if __name__ == '__main__':

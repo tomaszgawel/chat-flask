@@ -27,7 +27,7 @@ def get_data_from_server():
             read_size += 1024
 
         received_response = data.decode()
-        print("RECEIVED: " + received_response)
+        #print("RECEIVED: " + received_response)
 
         if received_response:
             #print("Starting making events: ")
@@ -71,7 +71,7 @@ def create_login_request(username):
 
 
 def send_request_to_server(request_string):
-    print('Send: %r' % request_string)
+    #print('Send: %r' % request_string)
     server_socket.send(request_string.encode())
     time.sleep(0.1)
 
