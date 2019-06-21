@@ -1,4 +1,5 @@
 import socket
+import ssl
 import sys
 import threading
 import time
@@ -82,7 +83,9 @@ def create_message_request(username, message):
     return message_request_string
 
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+context = ssl.create_default_context(cafile="server.crt")
+server_socket = context.wrap_socket(socket, server_side=False, server_hostname='server')
 
 
 def start():
@@ -91,5 +94,6 @@ def start():
 
         threading.Thread(target=get_data_from_server).start()
 
-    except socket.error as e:
+    # for now :)))))
+    except Exception as e:
         print(e)
