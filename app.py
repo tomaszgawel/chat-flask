@@ -1,11 +1,11 @@
 from flask import Flask, json
 from flask import request
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 
 from client import send_request_to_server, create_login_request, create_message_request, module_var, start
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 start()
 
 
@@ -22,17 +22,16 @@ def send_message():
 
 
 @app.route('/api/login', methods=['POST'])
-@cross_origin()
 def login():
     body = request.data
     data = json.loads(body)
 
-    send_request_to_server(create_login_request(data['login']))
+    send_request_to_server(create_login_request(data['username']))
 
     if module_var.isLogged:
-        response = {'login': data['login'], 'access': 'grated'}
+        response = {'username': data['username'], 'access': 'grated'}
     else:
-        response = {'login': data['login'], 'access': 'denied'}
+        response = {'username': data['username'], 'access': 'denied'}
 
     return app.response_class(
         response=json.dumps(response),
