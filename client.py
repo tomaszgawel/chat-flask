@@ -52,8 +52,12 @@ def create_event_from_string(response_from_server):
             print("REJECT LOGIN")
 
     elif event_from_server.event_type == event_types.MESSAGE_REQUEST:
-        #print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
-        module_var.all_messages.append(event_from_server)
+        # print("\nMessage\n{}: {}".format(event_from_server.login, event_from_server.message))
+        event_from_server_object = {'user': event_from_server.login,
+                                    'messageText': event_from_server.message,
+                                    'created': event_from_server.timestamp}
+        print(event_from_server_object)
+        module_var.all_messages.append(event_from_server_object)
 
     elif event_from_server.event_type == event_types.ONLINE_REQUEST:
         module_var.online_list.clear()
