@@ -37,5 +37,9 @@ def send_message():
         mimetype='application/json'
     )
 
+@app.route('/onlineusers', methods=['GET'])
+def get_online_users():
+    return json.dumps({"online:": module_var.online_list})
+
 if __name__ == '__main__':
     app.run()
