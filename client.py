@@ -21,6 +21,7 @@ def get_data_from_server():
     read_size = 1024
     while True:
         data = server_socket.recv(1024)
+        print("Data?:" + data.decode())
         full_length = event_parser.get_full_length(data.decode())
 
         while read_size < full_length:
@@ -68,7 +69,16 @@ def create_event_from_string(response_from_server):
 def create_login_request(username):
     login_request = event_types.LoginRequest(username)
     login_request_string = login_request.convert_to_string()
+    print(login_request_string)
     return login_request_string
+
+
+def create_logout_request(username, is_logged_out):
+    logout_request = event_types.LogoutRequest(username, is_logged_out)
+    logout_request_string = logout_request.convert_to_string()
+    print(logout_request_string)
+    # module_var.isLogged = False
+    return logout_request_string
 
 
 def send_request_to_server(request_string):
@@ -80,6 +90,7 @@ def send_request_to_server(request_string):
 def create_message_request(username, message):
     message_request = event_types.MessageRequest(username, message)
     message_request_string = message_request.convert_to_string()
+    print(message_request_string)
     return message_request_string
 
 
