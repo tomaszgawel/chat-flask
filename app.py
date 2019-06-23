@@ -46,7 +46,6 @@ def get_all_available_message():
 
     if module_var.all_messages:
         all_messages_response = json.dumps(module_var.all_messages)
-        print(all_messages_response)
         module_var.all_messages.clear()
 
     return app.response_class(
@@ -65,7 +64,6 @@ def get_online_users():
 def logout_user():
     body = request.data
     data = json.loads(body)
-    print(data)
 
     send_request_to_server(create_logout_request(data['username'], data['logout']))
 
