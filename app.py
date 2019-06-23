@@ -2,7 +2,7 @@ from flask import Flask, json
 from flask import request
 from flask_cors import CORS
 
-from client import send_request_to_server, create_login_request, create_message_request, module_var, start
+from client import send_request_to_server, create_login_request, create_message_request, module_var, start, create_logout_request
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -46,7 +46,6 @@ def get_all_available_message():
 
     if module_var.all_messages:
         all_messages_response = json.dumps(module_var.all_messages)
-        print(all_messages_response)
         module_var.all_messages.clear()
 
     return app.response_class(
@@ -60,6 +59,19 @@ def get_all_available_message():
 def get_online_users():
     return json.dumps({"online": module_var.online_list})
 
+
+@app.route('/api/logout', methods=['POST'])
+def logout_user():
+    body = request.data
+    data = json.loads(body)
+
+    send_request_to_server(create_logout_request(data['username'], data['logout']))
+
+    return app.response_class(
+        response=body,
+        status=200,
+        mimetype='application/json'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, use_evalex=False)
